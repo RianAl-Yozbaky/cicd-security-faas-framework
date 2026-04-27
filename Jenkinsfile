@@ -26,9 +26,9 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Stage 4: Test"
-                sh 'pytest tests/'
-            }
-        }
+                sh 'PYTHONPATH=. pytest tests/'
+             }
+       }
 
         stage('Release') {
             steps {

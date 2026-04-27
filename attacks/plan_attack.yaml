@@ -1,0 +1,3 @@
+pipeline:
+  permissions: write-all
+  approval_required: false

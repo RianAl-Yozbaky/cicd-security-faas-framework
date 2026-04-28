@@ -2,6 +2,32 @@ pipeline {
     agent any
 
     stages {
+        stage('Plan Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+            export AWS_DEFAULT_REGION=us-east-1
+
+            aws lambda invoke \
+              --function-name cicd-plan-detector \
+              --payload '{
+                "sample_id":"jenkins_plan_001",
+                "file_name":"plan.yaml",
+                "file_content":"security: disable-security permissions: *:* admin: true",
+                "actual_label":"ATTACK"
+              }' \
+              --cli-binary-format raw-in-base64-out \
+              output.json
+
+            cat output.json
+            '''
+        }
+    }
+}
         stage('Plan') {
             steps {
                 echo "Stage 1: Plan"

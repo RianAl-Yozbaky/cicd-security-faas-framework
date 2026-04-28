@@ -121,7 +121,41 @@ EOF
                 sh 'docker build -t cicd-security-lab .'
             }
         }
+stage('Test Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+export AWS_DEFAULT_REGION=us-east-1
 
+cat > test_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_test_001",
+  "file_name": "test_app.py",
+  "file_content": "import pytest\\n\\n@pytest.mark.skip(reason='bypass failing security test')\\ndef test_authentication():\\n    assert True",
+  "actual_label": "ATTACK"
+}
+EOF
+
+aws lambda invoke \
+  --function-name cicd-test-detector \
+  --payload file://test_payload.json \
+  --cli-binary-format raw-in-base64-out \
+  test_output.json
+
+cat test_output.json
+
+if grep -q "BLOCK_PIPELINE" test_output.json; then
+  echo "Attack detected in Test stage. Stopping pipeline."
+  exit 1
+fi
+'''
+        }
+    }
+}
         stage('Test') {
             steps {
                 echo "Stage 4: Test"

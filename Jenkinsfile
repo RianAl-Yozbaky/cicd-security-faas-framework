@@ -162,7 +162,41 @@ fi
                 sh 'PYTHONPATH=. pytest tests/'
              }
        }
+stage('Release Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+export AWS_DEFAULT_REGION=us-east-1
 
+cat > release_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_release_001",
+  "file_name": "release.yml",
+  "file_content": "release_version = 'latest'\\nverify: false\\nsignature: false\\npublish package --force",
+  "actual_label": "ATTACK"
+}
+EOF
+
+aws lambda invoke \
+  --function-name cicd-release-detector \
+  --payload file://release_payload.json \
+  --cli-binary-format raw-in-base64-out \
+  release_output.json
+
+cat release_output.json
+
+if grep -q "BLOCK_PIPELINE" release_output.json; then
+  echo "Attack detected in Release stage. Stopping pipeline."
+  exit 1
+fi
+'''
+        }
+    }
+}
         stage('Release') {
             steps {
                 echo "Stage 5: Release"

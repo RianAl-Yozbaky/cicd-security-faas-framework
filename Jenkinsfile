@@ -17,8 +17,8 @@
               --payload '{
                 "sample_id":"jenkins_plan_001",
                 "file_name":"plan.yaml",
-                "file_content":"security: disable-security permissions: *:* admin: true",
-                "actual_label":"ATTACK"
+                "file_content":"security: enabled permissions: read-only admin: false",
+                "actual_label":"CLEAN"
               }' \
               --cli-binary-format raw-in-base64-out \
               output.json

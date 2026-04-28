@@ -245,7 +245,41 @@ fi
                 sh 'docker run --rm cicd-security-lab'
             }
         }
+stage('Operate Monitor Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+export AWS_DEFAULT_REGION=us-east-1
 
+cat > operate_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_operate_001",
+  "file_name": "runtime-log.txt",
+  "file_content": "WARNING unauthorized access detected\\nfailed password for root\\nunexpected outbound connection to suspicious ip\\nxmrig miner process started",
+  "actual_label": "ATTACK"
+}
+EOF
+
+aws lambda invoke \
+  --function-name cicd-operate-monitor-detector \
+  --payload file://operate_payload.json \
+  --cli-binary-format raw-in-base64-out \
+  operate_output.json
+
+cat operate_output.json
+
+if grep -q "BLOCK_PIPELINE" operate_output.json; then
+  echo "Attack detected in Operate/Monitor stage. Stopping pipeline."
+  exit 1
+fi
+'''
+        }
+    }
+}
         stage('Operate-Monitor') {
             steps {
                 echo "Stage 7: Operate/Monitor"

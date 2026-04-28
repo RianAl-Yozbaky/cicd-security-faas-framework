@@ -218,8 +218,8 @@ cat > deploy_payload.json << 'EOF'
 {
   "sample_id": "jenkins_deploy_001",
   "file_name": "deployment.yaml",
-  "file_content": "apiVersion: apps/v1\\nkind: Deployment\\nspec:\\n  template:\\n    spec:\\n      hostNetwork: true\\n      containers:\\n      - name: app\\n        image: demo:latest\\n        securityContext:\\n          privileged: true\\n          allowPrivilegeEscalation: true",
-  "actual_label": "ATTACK"
+  "file_content": "apiVersion: apps/v1\\nkind: Deployment\\nspec:\\n  template:\\n    spec:\\n      automountServiceAccountToken: false\\n      containers:\\n      - name: app\\n        image: demo:1.0.2\\n        securityContext:\\n          privileged: false\\n          allowPrivilegeEscalation: false",
+  "actual_label": "CLEAN"
 }
 EOF
 

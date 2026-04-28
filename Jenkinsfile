@@ -135,8 +135,8 @@ cat > test_payload.json << 'EOF'
 {
   "sample_id": "jenkins_test_001",
   "file_name": "test_app.py",
-  "file_content": "import pytest\\n\\n@pytest.mark.skip(reason='bypass failing security test')\\ndef test_authentication():\\n    assert True",
-  "actual_label": "ATTACK"
+  "file_content": "def test_addition():\\n    assert 2 + 3 == 5\\n\\ndef test_subtraction():\\n    assert 5 - 2 == 3",
+  "actual_label": "CLEAN"
 }
 EOF
 

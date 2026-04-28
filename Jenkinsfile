@@ -204,7 +204,41 @@ fi
                 sh 'docker save cicd-security-lab -o release/cicd-security-lab.tar'
             }
         }
+stage('Deploy Security Check') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'aws-credentials',
+            usernameVariable: 'AWS_ACCESS_KEY_ID',
+            passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+        )]) {
+            sh '''
+export AWS_DEFAULT_REGION=us-east-1
 
+cat > deploy_payload.json << 'EOF'
+{
+  "sample_id": "jenkins_deploy_001",
+  "file_name": "deployment.yaml",
+  "file_content": "apiVersion: apps/v1\\nkind: Deployment\\nspec:\\n  template:\\n    spec:\\n      hostNetwork: true\\n      containers:\\n      - name: app\\n        image: demo:latest\\n        securityContext:\\n          privileged: true\\n          allowPrivilegeEscalation: true",
+  "actual_label": "ATTACK"
+}
+EOF
+
+aws lambda invoke \
+  --function-name cicd-deploy-detector \
+  --payload file://deploy_payload.json \
+  --cli-binary-format raw-in-base64-out \
+  deploy_output.json
+
+cat deploy_output.json
+
+if grep -q "BLOCK_PIPELINE" deploy_output.json; then
+  echo "Attack detected in Deploy stage. Stopping pipeline."
+  exit 1
+fi
+'''
+        }
+    }
+}
         stage('Deploy') {
             steps {
                 echo "Stage 6: Deploy"

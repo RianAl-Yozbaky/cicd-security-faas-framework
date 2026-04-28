@@ -1,4 +1,4 @@
-pipeline {
+        pipeline {
     agent any
 
     stages {
@@ -24,6 +24,11 @@ pipeline {
               output.json
 
             cat output.json
+
+            if grep -q "BLOCK_PIPELINE" output.json; then
+                 echo "Attack detected by Lambda. Stopping pipeline."
+              exit 1
+            fi
             '''
         }
     }

